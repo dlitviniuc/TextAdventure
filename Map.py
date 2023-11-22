@@ -112,7 +112,9 @@ class Mappa:
         #check if any room is disconnected from the rest by counting the rooms connected to any of them and seeing if that number is less than the total number of rooms
         expand = self.disconnected(map)
         #print("expand? ", expand)
-        while expand:
+        loops = 0
+        while expand and loops<10:
+            loops+=1
             print("expansion")
             for x in range(rows):#mark connected corridors
                 for y in range(cols):

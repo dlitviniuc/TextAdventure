@@ -20,7 +20,6 @@ class Encounter:
         while self.character.is_alive() and self.npc.is_alive():
             #mark that the player really fought
             fought = True
-            #print("\033c", end='')
             #Character turn
             choice = ""
             #loop till a valid choice is made
@@ -28,7 +27,7 @@ class Encounter:
                 #print("\033c", end='')
                 print("HP: {}    Enemy HP: {}".format(self.character.hp, self.npc.hp))
                 print("What will you do?")
-                choice = input("Attack - Defend - Heal - Charge - Run")
+                choice = input("Attack - Defend - Heal - Charge - Run\n")
             #check which action was taken and apply it
             action = 0
             if choice.upper() in choices.keys():
