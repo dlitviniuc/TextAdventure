@@ -8,7 +8,7 @@ from combat import Encounter
 #variable to check if the game is still going
 endGame = False
 width = 900
-height = 550
+height = 650
 class Window(Frame):
     #initializing the window
     def __init__(self, root):
@@ -58,7 +58,7 @@ class Window(Frame):
         dialogs.configure(background="gray58")
     #setting up the map and character stats
     def setMap(self):
-        map = tk.Text(self, height=self.nav.map.rows, width=self.nav.map.cols*2, name="map", font=("Arial", 15))
+        map = tk.Text(self, height=self.nav.map.rows, width=self.nav.map.cols*2, name="map", font=("Arial", 12))
         map.grid(column=0, row=0)
         mapText = self.nav.map.printWorld()
         map.delete('1.0',END)
@@ -67,7 +67,7 @@ class Window(Frame):
         self.combattant(self.nav.char.hp, self.nav.char.damage, self.nav.char.defence, [0,3])
     #setting up the main text frame
     def setText(self, dialog=""):
-        text = tk.Text(self,height=12, width=60, name="mainText", font=("Arial", 15))
+        text = tk.Text(self,height=15, width=60, name="mainText", font=("Arial", 15))
         text.grid(column=1, row=0, columnspan=3, rowspan=3)
         text.configure(background="gray58")
         text.delete('1.0',END)

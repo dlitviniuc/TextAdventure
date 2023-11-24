@@ -16,7 +16,6 @@ class Campfire(MapTile):
             return "You enter the room and see a used campfire, only ash remains of the wood and no food in sight. There is some water tho, rejoyce\n"
     def rest(self):
         if not self.used:
-            #res = input("Would you like to rest up? You can return later if you don't (Y/N)")
             return "Would you like to rest up? You can return later if you don't"
     def choice(self, character, choice):
             if choice:

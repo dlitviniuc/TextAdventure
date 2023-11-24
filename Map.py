@@ -2,9 +2,9 @@ import random
 #from pandas import DataFrame
 import copy
 
-rows = 5 #can be changed to make the map bigger
-cols = 5 #can be changed to make the map bigger
-mana = 20 #can be changed to allow more rooms in the map
+rows = 10 #can be changed to make the map bigger
+cols = 10 #can be changed to make the map bigger
+mana = 50 #can be changed to allow more rooms in the map
 
 rooms = {
     "Campfire":-5,
@@ -115,12 +115,13 @@ class Mappa:
         expand = self.disconnected(map)
         #print("expand? ", expand)
         loops = 0
-        while expand and loops<10:
+        valid=[4]
+        while expand and loops < 20:
             loops+=1
-            print("expansion")
+            #print("expansion")
             for x in range(rows):#mark connected corridors
                 for y in range(cols):
-                    if map[x][y] in [4,5]:
+                    if map[x][y] in valid:
                         #lenghten the corridors till limit, it's by 1 each time this iteration loops
                         self.expandCorridors(map,x,y,limit)
             #increase max length of each corridor
@@ -148,7 +149,14 @@ class Mappa:
             self.lengthenCorridor(map,x,y-limit,0,-limit)
         if self.right(map,x,y) in valid:
             self.lengthenCorridor(map,x,y+limit,0,limit)
-
+        if self.up(map,x,y) in valid and self.left(map,x,y) in valid:
+            self.lengthenCorridor(map,x-1,y-1,0,0)
+        if self.up(map,x,y) in valid and self.right(map,x,y) in valid:
+            self.lengthenCorridor(map,x-1,y+1,0,0)
+        if self.down(map,x,y) in valid and self.left(map,x,y) in valid:
+            self.lengthenCorridor(map,x+1,y-1,0,0)
+        if self.down(map,x,y) in valid and self.right(map,x,y) in valid:
+            self.lengthenCorridor(map,x+1,y+1,0,0)
     def lengthenCorridor(self,map,x,y,i,j):#mark the next cell in line as a corridor if it's possible
         if x+i<rows and x+i>=0 and y+j<cols and y+j>=0:
             if map[x+i][y+j] == 0:
