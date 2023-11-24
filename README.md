@@ -5,4 +5,4 @@ A python text adventure with procedural generation of the map
 
 # run main.py to start playing
 
-# the TextAdventureWithGUI has a newer version with a gui
+# the TextAdventureWithGUI branch has a newer version with a gui
