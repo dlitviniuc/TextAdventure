@@ -1,5 +1,5 @@
 import random
-from pandas import DataFrame
+#from pandas import DataFrame
 import copy
 
 rows = 5 #can be changed to make the map bigger
@@ -30,6 +30,8 @@ class Mappa:
         self.start = (0,0)
         self.end = (0,0)
         self.fullMap = []
+        self.rows = rows
+        self.cols = cols
         for i in range(rows):
             for j in range(cols):
                 self._world[(i,j)] = None
@@ -240,7 +242,13 @@ class Mappa:
                     printMap[x][y]="#"
                 else:
                     printMap[x][y]="#"
-        print(DataFrame(printMap))
+        stringMap = ""
+        for i in range(rows):
+            for j in range(cols):
+                stringMap+=printMap[i][j]+" "
+            stringMap+="\n"
+        return stringMap
+        #print(DataFrame(printMap))
     #method to check for disconnected rooms
     def disconnected(self, mat):
         tempmat = copy.deepcopy(mat)
