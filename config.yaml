@@ -1,0 +1,41 @@
+map_size:
+  rows: 10
+  columns: 10
+
+mana: 50
+
+rooms:
+  Campfire: -5
+  LootRoom: 1
+  SpiderRoom: 3
+  GoblinRoom: 5
+  SkeletonRoom: 3
+  ImpRoom: 1
+  GiantRoom: 15
+
+items:
+  - Dagger
+  - Sword
+  - Spear
+  - Shield
+  - BreastPlate
+  - Boots
+
+windowSize:
+  width: 900
+  height: 650
+
+actionChoices:
+  ATTACK: 1
+  DEFEND: 2
+  HEAL: 3
+  CHARGE: 4
+  RUN: 5
+
+charStats:
+  name: Adventurer
+  maxhp: 50
+  hp: 50
+  defence: 1
+  damage: 3
+  gold: 0

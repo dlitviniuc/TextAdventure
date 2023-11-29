@@ -1,57 +1,54 @@
-#dictionary with the options usable in combat, the value is used for logic
-choices = {
-    "ATTACK":1,
-    "DEFEND":2,
-    "HEAL":3,
-    "CHARGE":4,
-    "RUN":5
-}
+import yaml
+
+charDef = 0 #additional defence in case the user defends
+charCharge = 1 #additional damage multiplier in case of charge
 
 class Encounter:
     def __init__(self, char, npc) -> None:
         self.character = char
         self.npc = npc
+        self.fighting = False
     
-    def fight(self):
-        fought = False #check if the user has fought this enemy or it was already dead to not heal each time
-        charDef = 0 #additional defence in case the user defends
-        charCharge = 1 #additional damage multiplier in case of charge
+    def fight(self, action):
+        self.fighting=True
+        #fought = False #check if the user has fought this enemy or it was already dead to not heal each time
+        global charCharge
+        global charDef
         #while both parties are alive, let em fight
-        while self.character.is_alive() and self.npc.is_alive():
-            #mark that the player really fought
-            fought = True
-            #Character turn
-            choice = ""
-            #loop till a valid choice is made
-            while not choice.upper() in choices.keys():
-                #print("\033c", end='')
-                print("HP: {}    Enemy HP: {}".format(self.character.hp, self.npc.hp))
-                print("What will you do?")
-                choice = input("Attack - Defend - Heal - Charge - Run\n")
-            #check which action was taken and apply it
-            action = 0
-            if choice.upper() in choices.keys():
-                action = choices[choice.upper()]
-                print("action: ",action)
-            if action == 1:
-                self.npc.attacked(self.character.attack()*charCharge)
-                charCharge = 1
-            if action == 2:
-                charDef = 5
-            if action == 3:
-                self.character.heal(self.character.maxhp/5)
-            if action == 4:
-                charCharge = 3
-            if action == 5:
-                print("You escape the encounter but take a last blow to your back")
-                self.character.attacked(self.npc.attack() - charDef)
-                break
-            #Enemy turn simple attack
-            self.character.attacked(self.npc.attack() - charDef)
-            #reset the defend buff
-            charDef = 0
+        #while self.character.is_alive() and self.npc.is_alive():
+        #mark that the player really fought
         if not self.character.is_alive():
-            print("You died!")
-        if not self.npc.is_alive() and fought:
-            print("You made it!")
-            self.character.heal(self.character.maxhp/10)
+            self.fighting=False
+            return "You died!\n"
+        if not self.npc.is_alive():
+            self.fighting=False
+            #self.character.heal(self.character.maxhp/10)
+            return "You made it!\n"
+        #Character turn
+        #loop till a valid choice is made
+        #check which action was taken and apply it
+        answer = ""
+        if action == 1:
+            answer = self.npc.attacked(self.character.attack()*charCharge)
+            charCharge = 1
+            if not self.npc.is_alive():
+                self.fighting=False
+                return "You made it!\n"
+        if action == 2:
+            charDef = 5
+            answer= "You are defending"
+        if action == 5:
+            answer= self.character.heal(self.character.maxhp/5)
+        if action == 3:
+            charCharge = 3
+            answer= "You are charging an attack"
+        if action == 4:
+            self.character.attacked(self.npc.attack() - charDef)
+            answer = "You escape the encounter but take a last blow to your back"
+        answer+="\n"
+        #Enemy turn simple attack
+        answer += self.character.attacked(self.npc.attack() - charDef)
+        #reset the defend buff
+        charDef = 0
+        return answer
+        

@@ -1,35 +1,44 @@
 import random
-from pandas import DataFrame
+#from pandas import DataFrame
 import copy
+import yaml
 
-rows = 5 #can be changed to make the map bigger
-cols = 5 #can be changed to make the map bigger
-mana = 20 #can be changed to allow more rooms in the map
+rows = 10 #can be changed to make the map bigger
+cols = 10 #can be changed to make the map bigger
+mana = 50 #can be changed to allow more rooms in the map
 
 rooms = {
-    "Campfire":-5,
-    "LootRoom":1,
+    #"Campfire":-5,
+    #"LootRoom":1,
     #"EmptyCavePath":0,
-    "SpiderRoom":3,
-    "GoblinRoom":2,
-    "SkeletonRoom":4,
-    "ImpRoom":1,
-    "GiantRoom":15,
+    #"SpiderRoom":3,
+    #"GoblinRoom":2,
+    #"SkeletonRoom":4,
+    #"ImpRoom":1,
+    #"GiantRoom":15,
 }
 
 items = [
-    "Dagger", "Sword","Spear", "Shield", "BreastPlate", "Boots"
+    #"Dagger", "Sword","Spear", "Shield", "BreastPlate", "Boots"
 ]
 
 campfire = True #should only allow one campfire per map
-validRooms=[3,2,1] #the valid rooms, used in checks
+#validRooms=[3,2,1] #the valid rooms, used in checks
 
 class Mappa:
     def __init__(self):
+        global rooms
+        global items
+        with open("config.yaml", "r") as f:
+            config = yaml.safe_load(f)
+        rooms = config['rooms']
+        items = config['items']
         self._world = {}
         self.start = (0,0)
         self.end = (0,0)
         self.fullMap = []
+        self.rows = rows
+        self.cols = cols
         for i in range(rows):
             for j in range(cols):
                 self._world[(i,j)] = None
@@ -58,7 +67,6 @@ class Mappa:
     def loadMap(self):
         global mana
         global campfire
-        global rooms
         while mana>0:
             #choose a random number to select a random room
             rand = random.randint(0,6)
@@ -77,7 +85,7 @@ class Mappa:
             x = random.randint(0,rows-1)
             y = random.randint(0,cols-1)
             #check that the location is empty, otherwise skip iteration
-            if self._world[(x,y)]!=None:
+            if self._world[(x,y)] is not None:
                 continue
             #if a loot room was selected, choose a random item to place inside and place the room
             if list(rooms.keys())[rand]=="LootRoom":
@@ -92,7 +100,7 @@ class Mappa:
         map = [[0 for _ in range(cols)] for _ in range(rows)] #initializing matrix to use for connecting the rooms
         #if in the world there's a room at location pos, place 3 on the map to mark it
         for pos, room in self._world.items():
-            if room != None:
+            if room is not None:
                 map[pos[0]][pos[1]] = 3 #marking rooms
         #save the map in the class for future use
         self.fullMap=map
@@ -101,7 +109,7 @@ class Mappa:
         map[self.end[0]][self.end[1]]=2 #marking finish
         #for each room, start expanding corridors in all cardinal directions
         for pos, room in self._world.items():
-            if room != None:
+            if room is not None:
                 self.expandSearch(map, pos[0],pos[1])
         #check for connected corridors
         self.corridorsConnected(map)
@@ -109,16 +117,18 @@ class Mappa:
         self.roomsReached(map)
         #limit length of the corridors, increasing at each iteration till all rooms are connected
         limit = 1
-        #check if any room is disconnected from the rest by counting the rooms connected to any of them and seeing if that number is less than the total number of rooms
+        #check if any room is disconnected from the rest by counting the rooms connected to any of them and 
+        #seeing if that number is less than the total number of rooms
         expand = self.disconnected(map)
         #print("expand? ", expand)
         loops = 0
-        while expand and loops<10:
+        valid=[4]
+        while expand and loops < 20:
             loops+=1
-            print("expansion")
+            #print("expansion")
             for x in range(rows):#mark connected corridors
                 for y in range(cols):
-                    if map[x][y] in [4,5]:
+                    if map[x][y] in valid:
                         #lenghten the corridors till limit, it's by 1 each time this iteration loops
                         self.expandCorridors(map,x,y,limit)
             #increase max length of each corridor
@@ -146,7 +156,14 @@ class Mappa:
             self.lengthenCorridor(map,x,y-limit,0,-limit)
         if self.right(map,x,y) in valid:
             self.lengthenCorridor(map,x,y+limit,0,limit)
-
+        if self.up(map,x,y) in valid and self.left(map,x,y) in valid:
+            self.lengthenCorridor(map,x-1,y-1,0,0)
+        if self.up(map,x,y) in valid and self.right(map,x,y) in valid:
+            self.lengthenCorridor(map,x-1,y+1,0,0)
+        if self.down(map,x,y) in valid and self.left(map,x,y) in valid:
+            self.lengthenCorridor(map,x+1,y-1,0,0)
+        if self.down(map,x,y) in valid and self.right(map,x,y) in valid:
+            self.lengthenCorridor(map,x+1,y+1,0,0)
     def lengthenCorridor(self,map,x,y,i,j):#mark the next cell in line as a corridor if it's possible
         if x+i<rows and x+i>=0 and y+j<cols and y+j>=0:
             if map[x+i][y+j] == 0:
@@ -165,23 +182,19 @@ class Mappa:
     def up(self,map,x,y): #return the value on the map from a particular direction, -1 if it's out of bounds
         if x-1>=0:
             return map[x-1][y]
-        else:
-            return -1
+        return -1
     def down(self,map,x,y):
         if x+1<=rows-1:
             return map[x+1][y]
-        else:
-            return -1
+        return -1
     def left(self,map,x,y):
         if y-1>=0:
             return map[x][y-1]
-        else:
-            return -1
+        return -1
     def right(self,map,x,y):
         if y+1<=cols-1:
             return map[x][y+1]
-        else:
-            return -1
+        return -1
 
     def corridorsConnected(self, map):#mark corridors that connect to another one with 5 on the map
         connected = [5,6,3,4,1,2]
@@ -240,7 +253,13 @@ class Mappa:
                     printMap[x][y]="#"
                 else:
                     printMap[x][y]="#"
-        print(DataFrame(printMap))
+        stringMap = ""
+        for i in range(rows):
+            for j in range(cols):
+                stringMap+=printMap[i][j]+" "
+            stringMap+="\n"
+        return stringMap
+        #print(DataFrame(printMap))
     #method to check for disconnected rooms
     def disconnected(self, mat):
         tempmat = copy.deepcopy(mat)
