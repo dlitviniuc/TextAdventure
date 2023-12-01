@@ -22,11 +22,22 @@ items = [
     #"Dagger", "Sword","Spear", "Shield", "BreastPlate", "Boots"
 ]
 
+roomSign={
+    "StartRoom":1,
+    "EndRoom":2,
+    "EmptyCavePath":5,
+    "EnemyRoom":6,
+    "Campfire":6,
+    "LootRoom":6
+}
+
+EnemyRooms=["GoblinRoom", "SpiderRoom", "SkeletonRoom", "ImpRoom", "GiantRoom"]
+
 campfire = True #should only allow one campfire per map
 #validRooms=[3,2,1] #the valid rooms, used in checks
 
 class Mappa:
-    def __init__(self):
+    def __init__(self, savedGame, loadout=None):
         global rooms
         global items
         with open("config.yaml", "r") as f:
@@ -39,20 +50,55 @@ class Mappa:
         self.fullMap = []
         self.rows = rows
         self.cols = cols
+        if not savedGame:
+            for i in range(rows):
+                for j in range(cols):
+                    self._world[(i,j)] = None
+            #print("setting start and end")
+            self.setStart()#set start and end rooms at random
+            #print("starting to create the map")
+            self.loadMap()#set some rooms at random up to a weight set in global vars
+            #print("Map created, connecting rooms")
+            self.fullMap=self.connectRooms()#connect the rooms and get a map with the places that will be corridors(empty rooms)
+            #print("Placing corridors in the world")
+            self.placeCorridors(self.fullMap)#place the corridors
+            #print("Printing the map")
+            #self.printWorld()#print the map
+        else:
+            self.fromFile(loadout)
+    
+    def fromFile(self,loadout):
+        self.fullMap = [[0 for _ in range(cols)] for _ in range(rows)]
         for i in range(rows):
             for j in range(cols):
-                self._world[(i,j)] = None
-        #print("setting start and end")
-        self.setStart()#set start and end rooms at random
-        #print("starting to create the map")
-        self.loadMap()#set some rooms at random up to a weight set in global vars
-        #print("Map created, connecting rooms")
-        self.fullMap=self.connectRooms()#connect the rooms and get a map with the places that will be corridors(empty rooms)
-        #print("Placing corridors in the world")
-        self.placeCorridors(self.fullMap)#place the corridors
-        #print("Printing the map")
-        self.printWorld()#print the map
-    
+                key = "{}_{}".format(i,j)
+                if key in loadout.keys():
+                    #print(loadout[key])
+                    name = loadout[key]['name']
+                    if name == "LootRoom":
+                        val=6
+                        item = getattr(__import__('item'), loadout[key]['item'])()
+                        self._world[(i,j)] = getattr(__import__('MapTile'), loadout[key]['name'])(i,j,item)
+                        self._world[(i,j)].present = loadout[key]['info']
+                    elif name in EnemyRooms:
+                        val = 6
+                        enemy = getattr(__import__('enemy'), loadout[key]['enemy'])()
+                        self._world[(i,j)] = getattr(__import__('MapTile'), loadout[key]['name'])(i,j)
+                        self._world[(i,j)].enemy.hp = loadout[key]['info']
+                    else:
+                        val = roomSign[loadout[key]['name']]
+                        self._world[(i,j)] = getattr(__import__('MapTile'), loadout[key]['name'])(i,j)
+                        if loadout[key]['name'] == "StartRoom":
+                            self.start=(i,j)
+                        elif loadout[key]['name'] == "Campfire":
+                            self._world[(i,j)].used = loadout[key]['info']
+                    if loadout[key]['name'] == "EnemyRoom":
+                        self._world[(i,j)].enemy.hp = int(loadout[key]['info'])
+                else:
+                    val = 0
+                    self._world[(i,j)] = None
+                self.fullMap[i][j] = val
+
     def setStart(self):#set the start and finish locations at random
         x = random.randint(0,rows-1)
         y = random.randint(0,cols-1)
@@ -69,7 +115,7 @@ class Mappa:
         global campfire
         while mana>0:
             #choose a random number to select a random room
-            rand = random.randint(0,6)
+            rand = random.randint(0,rooms.__len__()-1)
             #check to make sure only 1 campfire is allowed
             if list(rooms.keys())[rand]=="Campfire" and campfire:
                 campfire = False
@@ -294,4 +340,13 @@ class Mappa:
         if y+1<cols :
             if mat[x][y+1]>0:
                 self.findRooms(mat,x,y+1)
+    
+    def saveLayout(self):
+        data = {}
+        for room in self._world.values():
+            if room is not None:
+                info = room.get_data()
+                #print(info)
+                data["{}_{}".format(info[0]['x'], info[0]['y'])] = info[1]
+        return data
         
