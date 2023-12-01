@@ -12,14 +12,28 @@ from character import Character
 import MapTile
 from combat import Encounter
 from item import Item
+import yaml
 
 endGame = False
 
 class Navigation:
     def __init__(self) -> None:
-        self.map = Mappa()
-        self.char = Character("Player", 50, 50, 0, 2)
-        self.position = self.map.start
+        with open("config.yaml", "r") as f:
+            config = yaml.safe_load(f)
+        if not config['save']:
+            print('no save')
+            charStats = config['charStats']
+            self.map = Mappa(False)
+            self.position = self.map.start
+        else:
+            with open(config['savefile'], 'r') as f:
+                data = yaml.safe_load(f)
+                savedLoadout = data['map']
+                charStats = data['char']
+                self.position = (int(data['position']['x']), int(data['position']['y']))
+            self.map = Mappa(True,savedLoadout)
+        self.char = Character(charStats["name"], charStats['maxhp'], charStats['hp'], charStats['defence'], charStats['damage'], charStats['gold'])
+       
 
     def start(self):#tutto da rifare per funzionare con bottoni
         global endGame

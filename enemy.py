@@ -2,12 +2,13 @@ from PIL import ImageTk, Image
 
 #generic enemy
 class Enemy:
-    def __init__(self, name, hp, defence, damage, image):
+    def __init__(self, name, hp, defence, damage, image, manacost):
         self.image = ImageTk.PhotoImage(Image.open("./images"+image).resize((200,250)))
         self.name = name
         self.hp = hp
         self.defence=defence
         self.damage=damage
+        self.manacost = manacost
     
     def is_alive(self):
         return self.hp>0
@@ -29,24 +30,24 @@ class Enemy:
 #Spider
 class Spider(Enemy):
     def __init__(self):
-        super().__init__(name="Giant Spider", hp=10, defence=1, damage=3, image="/spider.jpg")
+        super().__init__(name="Spider", hp=10, defence=1, damage=3, image="/spider.jpg", manacost=3)
 
 #Goblin
 class Goblin(Enemy):
     def __init__(self):
-        super().__init__(name="Goblin", hp=15, defence=3, damage=2, image="/goblin.jpg")
+        super().__init__(name="Goblin", hp=15, defence=3, damage=2, image="/goblin.jpg", manacost=5)
 
 #Skeleton
 class Skeleton(Enemy):
     def __init__(self):
-        super().__init__(name="Skeleton", hp=10, defence=0, damage=4, image="/skeleton.jpg")
+        super().__init__(name="Skeleton", hp=10, defence=0, damage=4, image="/skeleton.jpg", manacost=3)
 
 #Imp 
 class Imp(Enemy):
     def __init__(self):
-        super().__init__(name="Imp", hp=5, defence=2, damage=2, image="/imp.jpg")
+        super().__init__(name="Imp", hp=5, defence=2, damage=2, image="/imp.jpg", manacost=1)
 
 #Giant
 class Giant(Enemy):
     def __init__(self):
-        super().__init__(name="Giant", hp=30, defence=5, damage=5, image="/giant.jpg")
+        super().__init__(name="Giant", hp=30, defence=5, damage=5, image="/giant.jpg", manacost=15)

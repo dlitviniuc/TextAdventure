@@ -1,0 +1,174 @@
+char:
+  damage: 3
+  defence: 1
+  gold: 0
+  hp: 50
+  maxhp: 50
+  name: Adventurer
+map:
+  '0_0':
+    name: EmptyCavePath
+  '0_1':
+    enemy: Imp
+    info: 5
+    name: ImpRoom
+  '0_2':
+    enemy: Imp
+    info: 5
+    name: ImpRoom
+  '0_3':
+    name: EmptyCavePath
+  '1_0':
+    enemy: Spider
+    info: 10
+    name: SpiderRoom
+  '1_1':
+    name: EmptyCavePath
+  '1_2':
+    name: EmptyCavePath
+  '1_3':
+    info: true
+    item: Boots
+    name: LootRoom
+  '1_4':
+    name: EmptyCavePath
+  '1_5':
+    enemy: Imp
+    info: 5
+    name: ImpRoom
+  '1_6':
+    name: EmptyCavePath
+  '1_7':
+    name: EmptyCavePath
+  '2_0':
+    name: EmptyCavePath
+  '2_1':
+    name: EmptyCavePath
+  '2_2':
+    name: EmptyCavePath
+  '2_3':
+    name: EmptyCavePath
+  '2_5':
+    name: EmptyCavePath
+  '2_6':
+    name: EmptyCavePath
+  '2_7':
+    enemy: Goblin
+    info: 15
+    name: GoblinRoom
+  '2_8':
+    name: EmptyCavePath
+  '2_9':
+    enemy: Spider
+    info: 10
+    name: SpiderRoom
+  '3_0':
+    name: EmptyCavePath
+  '3_1':
+    enemy: Goblin
+    info: 15
+    name: GoblinRoom
+  '3_2':
+    enemy: Skeleton
+    info: 10
+    name: SkeletonRoom
+  '3_3':
+    enemy: Spider
+    info: 10
+    name: SpiderRoom
+  '3_4':
+    name: EmptyCavePath
+  '3_5':
+    enemy: Imp
+    info: 5
+    name: ImpRoom
+  '3_6':
+    name: EmptyCavePath
+  '3_7':
+    name: EmptyCavePath
+  '3_9':
+    name: EmptyCavePath
+  '4_1':
+    name: EmptyCavePath
+  '4_2':
+    name: EmptyCavePath
+  '4_3':
+    name: EmptyCavePath
+  '4_4':
+    name: EmptyCavePath
+  '4_5':
+    info: true
+    item: Shield
+    name: LootRoom
+  '4_6':
+    name: EmptyCavePath
+  '4_9':
+    name: EmptyCavePath
+  '5_1':
+    enemy: Skeleton
+    info: 10
+    name: SkeletonRoom
+  '5_2':
+    name: EmptyCavePath
+  '5_3':
+    name: EmptyCavePath
+  '5_8':
+    name: EmptyCavePath
+  '5_9':
+    info: false
+    name: Campfire
+  '6_1':
+    name: EmptyCavePath
+  '6_2':
+    name: EndRoom
+  '6_3':
+    enemy: Goblin
+    info: 15
+    name: GoblinRoom
+  '6_8':
+    name: EmptyCavePath
+  '6_9':
+    name: EmptyCavePath
+  '7_1':
+    name: EmptyCavePath
+  '7_2':
+    name: EmptyCavePath
+  '7_3':
+    name: EmptyCavePath
+  '7_8':
+    name: StartRoom
+  '7_9':
+    name: EmptyCavePath
+  '8_1':
+    enemy: Imp
+    info: 5
+    name: ImpRoom
+  '8_2':
+    enemy: Spider
+    info: 10
+    name: SpiderRoom
+  '8_3':
+    name: EmptyCavePath
+  '8_4':
+    name: EmptyCavePath
+  '8_5':
+    enemy: Skeleton
+    info: 10
+    name: SkeletonRoom
+  '8_6':
+    name: EmptyCavePath
+  '9_1':
+    name: EmptyCavePath
+  '9_2':
+    name: EmptyCavePath
+  '9_4':
+    name: EmptyCavePath
+  '9_5':
+    enemy: Spider
+    info: 10
+    name: SpiderRoom
+  '9_6':
+    name: EmptyCavePath
+position:
+  x: 7
+  y: 8

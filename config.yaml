@@ -1,0 +1,36 @@
+charStats:
+  damage: 3
+  defence: 1
+  gold: 0
+  hp: 50
+  maxhp: 50
+  name: Adventurer
+customization:
+  activeButtonColor: gold2
+  inactiveButtonColor: gold3
+  mainBackgroundColor: gray58
+  secBackgroundColor: gray62
+items:
+- Dagger
+- Sword
+- Spear
+- Shield
+- Breastplate
+- Boots
+mana: 50
+map_size:
+  columns: 10
+  rows: 10
+rooms:
+  Campfire: -5
+  GiantRoom: 15
+  GoblinRoom: 5
+  ImpRoom: 1
+  LootRoom: 1
+  SkeletonRoom: 3
+  SpiderRoom: 3
+save: false
+savefile: savefile.yaml
+windowSize:
+  height: 650
+  width: 900

@@ -1,13 +1,16 @@
 import enemy
 
 class MapTile:
-    def __init__(self, x, y):
+    def __init__(self, x, y, cost=0):
         self.x = x
         self.y = y
+        self.cost = cost
+    def get_data(self):
+        return [{"x":self.x, "y":self.y},{}]
 
 class Campfire(MapTile):
     def __init__(self, x, y):
-        super().__init__(x, y)
+        super().__init__(x, y, -5)
         self.used = False
     def intro_text(self):
         if not self.used:
@@ -24,16 +27,27 @@ class Campfire(MapTile):
                 return "You now have {} HP\n".format(character.hp)
             if not choice:
                 return "You go further in the cave, knowing you have a place to rest in case you need it\n"
+    def get_data(self):
+        return [{"x":self.x, "y":self.y},{
+            "name":"Campfire",
+            "info":self.used
+            }]
+    def valid(self):
+        return not self.used
             
 class StartRoom(MapTile):
     def __init__(self, x, y):
-        super().__init__(x, y)
+        super().__init__(x, y, 0)
     def intro_text(self):
         return "You enter the infamous dungeon, riches surely await further in!!\n"
+    def get_data(self):
+        return [{"x":self.x, "y":self.y},{
+            "name":"StartRoom"
+            }]
 
 class EndRoom(MapTile):
     def __init__(self, x, y):
-        super().__init__(x, y)
+        super().__init__(x, y, 0)
     def intro_text(self):
         return "At long last, the exit!!\nDo you want to leave?"
     def choice(self, character, choice):
@@ -42,18 +56,37 @@ class EndRoom(MapTile):
             return "You leave the dungeon! But are you free?\n"
         else:
             return "You turn back, greed written on your eyes, will you be able to get back?\n"
+    def get_data(self):
+        return [{"x":self.x, "y":self.y},{
+            "name":"EndRoom"
+            }]
+    def valid(self):
+        return True
             
 class EnemyRoom(MapTile):
     def __init__(self, x, y, enemy):
         self.enemy = enemy
-        super().__init__(x, y)
+        super().__init__(x, y, enemy.manacost)
+    def get_data(self):
+        return [{"x":self.x, "y":self.y},{
+            "name":"{}Room".format(self.enemy.name),
+            "enemy": self.enemy.name,
+            "info": self.enemy.hp
+            }]
 
 class LootRoom(MapTile):
-    def __init__(self, x, y, item):
+    def __init__(self, x, y, item=None):
         self.present = True
         self.item = item
         super().__init__(x, y)
-    
+    def get_data(self):
+        return [{"x":self.x, "y":self.y},{
+            "name":"LootRoom",
+            "item": self.item.name,
+            "info":self.present
+            }]
+    def valid(self):
+        return self.present
     def intro_text(self):
         if self.present:
             return "Wow, you found: {}\n {} \n Pick up?\n".format(self.item.name, self.item.description)
@@ -73,6 +106,8 @@ class EmptyCavePath(MapTile):
 
     def intro_text(self):
         return "The same old moist walls and dark corners, you should check what's further in\n"
+    def get_data(self):
+        return [{"x":self.x, "y":self.y},{"name":"EmptyCavePath"}]
     
 class SpiderRoom(EnemyRoom):
     def __init__(self, x, y):

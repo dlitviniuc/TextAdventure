@@ -53,3 +53,13 @@ class Character:
 
     def attack(self):
         return self.damage
+    
+    def info(self):
+        return {
+            "name":self.name,
+            "maxhp":self.maxhp,
+            "hp":self.hp,
+            "defence":self.defence,
+            "damage":self.damage,
+            "gold":self.gold
+        }

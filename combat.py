@@ -1,11 +1,4 @@
-#dictionary with the options usable in combat, the value is used for logic
-choices = {
-    "ATTACK":1,
-    "DEFEND":2,
-    "HEAL":3,
-    "CHARGE":4,
-    "RUN":5
-}
+import yaml
 
 charDef = 0 #additional defence in case the user defends
 charCharge = 1 #additional damage multiplier in case of charge
@@ -37,10 +30,10 @@ class Encounter:
         answer = ""
         if action == 1:
             answer = self.npc.attacked(self.character.attack()*charCharge)
+            charCharge = 1
             if not self.npc.is_alive():
                 self.fighting=False
                 return "You made it!\n"
-            charCharge = 1
         if action == 2:
             charDef = 5
             answer= "You are defending"

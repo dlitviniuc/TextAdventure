@@ -1,5 +1,5 @@
 # TextAdventure
-A python text adventure with procedural generation of the map and a tkinter gui
+A python text adventure with procedural generation of the map
 
 # Install dependencies with pip install -r requirements.txt
 

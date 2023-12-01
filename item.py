@@ -25,7 +25,7 @@ class Spear(Item):
     def __init__(self):
         super().__init__(name="Spear", description="The weapon of war and mighty warrior, it need some maintenance", value=15, damage=6, defence=1)
 
-class BreastPlate(Item):
+class Breastplate(Item):
     def __init__(self):
         super().__init__(name="Breastplate", description="A preety nice breastplate, who knows why it has no rust", value=10, damage=0, defence=2)
 
