@@ -2,10 +2,13 @@ import random
 #from pandas import DataFrame
 import copy
 import yaml
+import pprint
+from typing import TypeAlias, NamedTuple
+import MapTile
+import math
+import networkx as nx
 
-rows = 10 #can be changed to make the map bigger
-cols = 10 #can be changed to make the map bigger
-mana = 50 #can be changed to allow more rooms in the map
+Node: TypeAlias = MapTile.MapTile
 
 rooms = {
     #"Campfire":-5,
@@ -48,29 +51,30 @@ class Mappa:
         self.start = (0,0)
         self.end = (0,0)
         self.fullMap = []
-        self.rows = rows
-        self.cols = cols
+        self.rows = config['map_size']['rows']
+        self.cols = config['map_size']['columns']
+        self.mana = config['mana']
         if not savedGame:
-            for i in range(rows):
-                for j in range(cols):
+            for i in range(self.rows):
+                for j in range(self.cols):
                     self._world[(i,j)] = None
             #print("setting start and end")
             self.setStart()#set start and end rooms at random
             #print("starting to create the map")
             self.loadMap()#set some rooms at random up to a weight set in global vars
             #print("Map created, connecting rooms")
-            self.fullMap=self.connectRooms()#connect the rooms and get a map with the places that will be corridors(empty rooms)
+            self.connectRooms()#connect the rooms and get a map with the places that will be corridors(empty rooms)
             #print("Placing corridors in the world")
-            self.placeCorridors(self.fullMap)#place the corridors
+            #self.placeCorridors(self.fullMap)#place the corridors
             #print("Printing the map")
             #self.printWorld()#print the map
         else:
             self.fromFile(loadout)
     
     def fromFile(self,loadout):
-        self.fullMap = [[0 for _ in range(cols)] for _ in range(rows)]
-        for i in range(rows):
-            for j in range(cols):
+        self.fullMap = [[0 for _ in range(self.cols)] for _ in range(self.rows)]
+        for i in range(self.rows):
+            for j in range(self.cols):
                 key = "{}_{}".format(i,j)
                 if key in loadout.keys():
                     #print(loadout[key])
@@ -82,7 +86,6 @@ class Mappa:
                         self._world[(i,j)].present = loadout[key]['info']
                     elif name in EnemyRooms:
                         val = 6
-                        enemy = getattr(__import__('enemy'), loadout[key]['enemy'])()
                         self._world[(i,j)] = getattr(__import__('MapTile'), loadout[key]['name'])(i,j)
                         self._world[(i,j)].enemy.hp = loadout[key]['info']
                     else:
@@ -100,20 +103,19 @@ class Mappa:
                 self.fullMap[i][j] = val
 
     def setStart(self):#set the start and finish locations at random
-        x = random.randint(0,rows-1)
-        y = random.randint(0,cols-1)
+        x = random.randint(0,self.rows-1)
+        y = random.randint(0,self.cols-1)
         self.start = (x,y)
         self._world[(x,y)] = getattr(__import__('MapTile'), "StartRoom")(x,y)
-        x = random.randint(0,rows-1)
-        y = random.randint(0,cols-1)
+        x = random.randint(0,self.rows-1)
+        y = random.randint(0,self.cols-1)
         if (x,y) != self.start:
             self._world[(x,y)] = getattr(__import__('MapTile'), "EndRoom")(x,y)
             self.end = (x,y)
     #add the event rooms to the map
     def loadMap(self):
-        global mana
         global campfire
-        while mana>0:
+        while self.mana>0:
             #choose a random number to select a random room
             rand = random.randint(0,rooms.__len__()-1)
             #check to make sure only 1 campfire is allowed
@@ -123,13 +125,13 @@ class Mappa:
                 if list(rooms.keys())[rand]=="Campfire" and not campfire:
                     continue
             #if the cost of the selected room is over mana, skip iteration, selecting another room
-            if list(rooms.values())[rand] > mana:
+            if list(rooms.values())[rand] > self.mana:
                 continue
             #decrease mana available
-            mana -= list(rooms.values())[rand]
+            self.mana -= list(rooms.values())[rand]
             #choose a location for the room
-            x = random.randint(0,rows-1)
-            y = random.randint(0,cols-1)
+            x = random.randint(0,self.rows-1)
+            y = random.randint(0,self.cols-1)
             #check that the location is empty, otherwise skip iteration
             if self._world[(x,y)] is not None:
                 continue
@@ -143,94 +145,45 @@ class Mappa:
                 self._world[(x,y)] = getattr(__import__('MapTile'), list(rooms.keys())[rand])(x,y)
     #method to connect the rooms
     def connectRooms(self):
-        map = [[0 for _ in range(cols)] for _ in range(rows)] #initializing matrix to use for connecting the rooms
-        #if in the world there's a room at location pos, place 3 on the map to mark it
-        for pos, room in self._world.items():
-            if room is not None:
-                map[pos[0]][pos[1]] = 3 #marking rooms
-        #save the map in the class for future use
-        self.fullMap=map
-        #print(map)
-        map[self.start[0]][self.start[1]] = 1 #marking start
-        map[self.end[0]][self.end[1]]=2 #marking finish
-        #for each room, start expanding corridors in all cardinal directions
-        for pos, room in self._world.items():
-            if room is not None:
-                self.expandSearch(map, pos[0],pos[1])
-        #check for connected corridors
-        self.corridorsConnected(map)
-        #check for rooms reached idk if it's still needed but meh
-        self.roomsReached(map)
-        #limit length of the corridors, increasing at each iteration till all rooms are connected
-        limit = 1
-        #check if any room is disconnected from the rest by counting the rooms connected to any of them and 
-        #seeing if that number is less than the total number of rooms
-        expand = self.disconnected(map)
-        #print("expand? ", expand)
-        loops = 0
-        valid=[4]
-        while expand and loops < 20:
-            loops+=1
-            #print("expansion")
-            for x in range(rows):#mark connected corridors
-                for y in range(cols):
-                    if map[x][y] in valid:
-                        #lenghten the corridors till limit, it's by 1 each time this iteration loops
-                        self.expandCorridors(map,x,y,limit)
-            #increase max length of each corridor
-            limit+=1
-            #recheck for connected corridors
-            self.corridorsConnected(map)
-            #check if an additional expansion is needed
-            expand = self.disconnected(map)
-        #return the map created
-        return map
-    #method to place the corridors added to connect the rooms to the world
-    def placeCorridors(self,map):
-        for x in range(rows):#mark connected corridors
-            for y in range(cols):
-                if map[x][y]==5:
-                    self._world[(x,y)] = getattr(__import__('MapTile'), "EmptyCavePath")(x,y)
-                
-    def expandCorridors(self,map,x,y,limit):#expand a corridor's length to reach an intersection
-        valid = [4,5,0]
-        if self.up(map,x,y) in valid:
-            self.lengthenCorridor(map,x-limit,y,-limit,0)
-        if self.down(map,x,y) in valid:
-            self.lengthenCorridor(map,x+limit,y,limit,0)
-        if self.left(map,x,y) in valid:
-            self.lengthenCorridor(map,x,y-limit,0,-limit)
-        if self.right(map,x,y) in valid:
-            self.lengthenCorridor(map,x,y+limit,0,limit)
-        if self.up(map,x,y) in valid and self.left(map,x,y) in valid:
-            self.lengthenCorridor(map,x-1,y-1,0,0)
-        if self.up(map,x,y) in valid and self.right(map,x,y) in valid:
-            self.lengthenCorridor(map,x-1,y+1,0,0)
-        if self.down(map,x,y) in valid and self.left(map,x,y) in valid:
-            self.lengthenCorridor(map,x+1,y-1,0,0)
-        if self.down(map,x,y) in valid and self.right(map,x,y) in valid:
-            self.lengthenCorridor(map,x+1,y+1,0,0)
-    def lengthenCorridor(self,map,x,y,i,j):#mark the next cell in line as a corridor if it's possible
-        if x+i<rows and x+i>=0 and y+j<cols and y+j>=0:
-            if map[x+i][y+j] == 0:
-                map[x+i][y+j] = 4
+        self.fullMap = [[0 for _ in range(self.cols)] for _ in range(self.rows)]
+        self.placeCorridors()
+        nodes = []
+        for node in self._world.values():
+            if not isinstance(node, MapTile.Wall) and not isinstance(node, MapTile.EndRoom) and not isinstance(node, MapTile.StartRoom):
+                nodes.append(node)
+        nodes.insert(0, self._world[self.start])
+        nodes.append(self._world[self.end])
+        #print("Nodes: ",nodes)
+        path = []
+        for i in range(nodes.__len__()-1):
+            path += solve(self, nodes[i], nodes[i+1])
+        #print("Path: ",path)
+        for cave in path:
+            if isinstance(self._world[(cave.x, cave.y)], MapTile.Wall) or isinstance(self._world[(cave.x, cave.y)], MapTile.EmptyCavePath):
+                self._world[(cave.x, cave.y)] = getattr(__import__('MapTile'), "EmptyCavePath")(cave.x,cave.y)
+                self.fullMap[cave.x][cave.y] = 5
+            elif isinstance(self._world[(cave.x, cave.y)], MapTile.StartRoom):
+                self.fullMap[cave.x][cave.y] = 1
+            elif isinstance(self._world[(cave.x, cave.y)], MapTile.EndRoom):
+                self.fullMap[cave.x][cave.y] = 2
+            else:
+                #print(self._world[(cave.x, cave.y)])
+                self.fullMap[cave.x][cave.y] = 6
+        
 
-    def expandSearch(self, map, x, y): #on a cell, add corridors to all possible sides
-        if self.up(map,x,y)==0:
-            map[x-1][y]=4
-        if self.down(map,x,y)==0:
-            map[x+1][y]=4
-        if self.left(map,x,y)==0:
-            map[x][y-1]=4
-        if self.right(map,x,y)==0:
-            map[x][y+1]=4
+    #method to place the corridors added to connect the rooms to the world
+    def placeCorridors(self):
+        for x in range(self.rows):#mark connected corridors
+            for y in range(self.cols):
+                if self._world[(x,y)]==None:
+                    self._world[(x,y)] = getattr(__import__('MapTile'), "Wall")(x,y)
     
     def up(self,map,x,y): #return the value on the map from a particular direction, -1 if it's out of bounds
         if x-1>=0:
             return map[x-1][y]
         return -1
     def down(self,map,x,y):
-        if x+1<=rows-1:
+        if x+1<=self.rows-1:
             return map[x+1][y]
         return -1
     def left(self,map,x,y):
@@ -238,55 +191,19 @@ class Mappa:
             return map[x][y-1]
         return -1
     def right(self,map,x,y):
-        if y+1<=cols-1:
+        if y+1<=self.cols-1:
             return map[x][y+1]
         return -1
 
-    def corridorsConnected(self, map):#mark corridors that connect to another one with 5 on the map
-        connected = [5,6,3,4,1,2]
-        for x in range(rows):#mark connected corridors
-            for y in range(cols):
-                matches = 0
-                if map[x][y]==4:
-                    if self.up(map,x,y) in connected:
-                        if self.up(map,x,y) == 4:
-                            map[x-1][y]=5
-                        matches +=1
-                    if self.down(map,x,y) in connected:
-                        if self.down(map,x,y) == 4:
-                            map[x+1][y]=5
-                        matches +=1
-                    if self.left(map,x,y) in connected:
-                        if self.left(map,x,y) == 4:
-                            map[x][y-1]=5
-                        matches +=1
-                    if self.right(map,x,y) in connected:
-                        if self.right(map,x,y) == 4:
-                            map[x][y+1]=5
-                        matches +=1
-                    if matches > 1:
-                        map[x][y]=5
-
-    def roomsReached(self, map):#mark rooms(start and end too) that are connected by connected corridors with 6 on the map(to change numbers)
-        connected = [1,2,5,6]
-        for x in range(rows):#mark reached rooms
-            for y in range(cols):
-                if map[x][y] == 3:
-                    if self.up(map,x,y) in connected:
-                        map[x][y]=6
-                    if self.down(map,x,y) in connected:
-                        map[x][y]=6
-                    if self.left(map,x,y) in connected:
-                        map[x][y]=6
-                    if self.right(map,x,y) in connected:
-                        map[x][y]=6
     #method to print the map on console
     def printWorld(self):
         #print("Full map")
         #print(DataFrame(fullMap))
-        printMap=[["#" for _ in range(cols)] for _ in range(rows)]
-        for x in range(rows):#mark reached rooms
-            for y in range(cols):
+        printMap=[["#" for _ in range(self.cols)] for _ in range(self.rows)]
+        #print(self.fullMap)
+        for x in range(self.rows):#mark reached rooms
+            for y in range(self.cols):
+                #print(f"x: {x}, y: {y}")
                 if self.fullMap[x][y]==1:
                     printMap[x][y]="S"
                 elif self.fullMap[x][y]==2:
@@ -300,47 +217,13 @@ class Mappa:
                 else:
                     printMap[x][y]="#"
         stringMap = ""
-        for i in range(rows):
-            for j in range(cols):
+        for i in range(self.rows):
+            for j in range(self.cols):
                 stringMap+=printMap[i][j]+" "
             stringMap+="\n"
         return stringMap
-        #print(DataFrame(printMap))
+        
     #method to check for disconnected rooms
-    def disconnected(self, mat):
-        tempmat = copy.deepcopy(mat)
-        pos = (0,0)
-        rooms = 0
-        for i in range(rows):
-            for j in range(cols):
-                if mat[i][j]>0:
-                    rooms+=1
-                    pos = (i,j)
-        self.findRooms(tempmat, pos[0], pos[1])
-        #print(DataFrame(tempmat))
-        discRooms =0
-        for i in range(rows):
-            for j in range(cols):
-                if tempmat[i][j]<0:
-                    discRooms+=1
-        #print("rooms: {} foundRooms: {}".format(rooms, discRooms))
-        return rooms>discRooms
-    #method to mark connected rooms marking them with -1 (corridors included)
-    def findRooms(self, mat, x,y):
-        mat[x][y]=-1
-        if x-1>=0 :
-            if mat[x-1][y]>0:
-                self.findRooms(mat,x-1,y)
-        if x+1<rows :
-            if mat[x+1][y]>0:
-                self.findRooms(mat,x+1,y)
-        if y-1>=0 :
-            if mat[x][y-1]>0:
-                self.findRooms(mat,x,y-1)
-        if y+1<cols :
-            if mat[x][y+1]>0:
-                self.findRooms(mat,x,y+1)
-    
     def saveLayout(self):
         data = {}
         for room in self._world.values():
@@ -350,3 +233,59 @@ class Mappa:
                 data["{}_{}".format(info[0]['x'], info[0]['y'])] = info[1]
         return data
         
+class Edge(NamedTuple):
+    node1 : Node
+    node2 : Node
+    @property
+    def distance(self)->float:
+        return math.dist((self.node1.x, self.node1.y),(self.node2.x, self.node2.y))
+    def weight(self, bonus=0)->float:
+        if self.node2 is None:
+            return self.distance
+        else:
+            return self.distance-bonus
+    
+    @property
+    def flip(self)->"Edge":
+        return Edge(self.node2, self.node1)
+        
+def get_nodes(map: Mappa)->set[Node]:
+    nodes: set[Node]= set()
+    for tile in map._world.values():
+        nodes.add(tile)
+    #print("Nodes : ", nodes)
+    return nodes
+
+def get_edges(map: Mappa, nodes: set[Node])->set[Edge]:
+    edges: set[Edge] = set()
+    for source_node in nodes:
+        node = source_node
+        #print("Node: ", node)
+        if node.x+1<map.cols:
+            node = map._world[(node.x+1,node.y)]
+            if node in nodes:
+                edges.add(Edge(source_node, node))
+        elif node.y+1<map.rows:
+            node = map._world[(node.x,node.y+1)]
+            if node in nodes:
+                edges.add(Edge(source_node, node))
+    #print("Returning edges: ", edges)
+    return edges
+
+def make_graph(map: Mappa)->nx.Graph:
+    return nx.Graph(
+        (edge.node1, edge.node2, {"weight": edge.weight()})
+        for edge in get_edges(map, get_nodes(map))
+    )
+
+def solve(map: Mappa, source: Node, target: Node)->list[MapTile.MapTile] | None:
+    try:
+        return nx.shortest_path(
+            make_graph(map),
+            source = source,
+            target = target,
+            weight = "weight"
+        )
+    except nx.NetworkXException:
+        print(nx.NetworkXException.__str__())
+        return None

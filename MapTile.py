@@ -34,6 +34,8 @@ class Campfire(MapTile):
             }]
     def valid(self):
         return not self.used
+    def __str__(self) -> str:
+        return "EmptyCave"
             
 class StartRoom(MapTile):
     def __init__(self, x, y):
@@ -44,6 +46,8 @@ class StartRoom(MapTile):
         return [{"x":self.x, "y":self.y},{
             "name":"StartRoom"
             }]
+    def __str__(self) -> str:
+        return "StartRoom"
 
 class EndRoom(MapTile):
     def __init__(self, x, y):
@@ -62,6 +66,8 @@ class EndRoom(MapTile):
             }]
     def valid(self):
         return True
+    def __str__(self) -> str:
+        return "EndRoom"
             
 class EnemyRoom(MapTile):
     def __init__(self, x, y, enemy):
@@ -73,6 +79,8 @@ class EnemyRoom(MapTile):
             "enemy": self.enemy.name,
             "info": self.enemy.hp
             }]
+    def __str__(self) -> str:
+        return "EnemyRoom"
 
 class LootRoom(MapTile):
     def __init__(self, x, y, item=None):
@@ -99,6 +107,8 @@ class LootRoom(MapTile):
             return "You pick {} up!\n".format(self.item.name)
         else:
             return "You leave it on the floor, maybe it was cursed\n"
+    def __str__(self) -> str:
+        return "LootRoom"
     
 class EmptyCavePath(MapTile):
     def __init__(self, x, y):
@@ -108,6 +118,11 @@ class EmptyCavePath(MapTile):
         return "The same old moist walls and dark corners, you should check what's further in\n"
     def get_data(self):
         return [{"x":self.x, "y":self.y},{"name":"EmptyCavePath"}]
+    def __str__(self) -> str:
+        return "EmptyCave"
+class Wall(MapTile):
+    def __init__(self,x,y):
+        super().__init__(x,y)
     
 class SpiderRoom(EnemyRoom):
     def __init__(self, x, y):
